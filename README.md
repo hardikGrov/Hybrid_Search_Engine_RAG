@@ -28,7 +28,7 @@ This repository currently contains structure only. Business logic should be adde
 ## Run
 
 ```bash
-uvicorn backend.app.main:app --reload
+uvicorn backend.app.api.main:app --reload
 ```
 
 ```bash
