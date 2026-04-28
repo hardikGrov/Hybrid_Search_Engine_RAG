@@ -1,8 +1,6 @@
 from fastapi import FastAPI
+from backend.app.api.routes import router
 
 app = FastAPI(title="Hybrid Search API")
 
-
-@app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+app.include_router(router)
