@@ -24,7 +24,15 @@ def clean_text(text: str) -> str:
 
 # Build record for each document
 def build_record(file_path: Path, doc_id: int):
+    if not file_path.exists():
+        raise FileNotFoundError(f"File '{file_path}' does not exist.")
+    if not file_path.is_file():
+        raise ValueError(f"Path '{file_path}' is not a file.")
+    
     text = file_path.read_text(encoding="utf-8", errors="ignore")
+
+    if not text:
+        return None
 
     return {
         "doc_id": f"doc_{doc_id}",
@@ -49,7 +57,13 @@ def main():
     input_dir = Path(args.input)
     output_path = Path(args.out)
 
+    if not input_dir.exists():
+        raise ValueError(f"Input directory '{input_dir}' does not exist.")
+
     files = load_files(input_dir)
+
+    if not files:
+        raise ValueError(f"No .txt or .md files found in '{input_dir}'.")
 
     records = []
     for i, file_path in enumerate(files):
