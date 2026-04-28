@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Scaffold for a hybrid search system with FastAPI and Streamlit."
 requires-python = ">=3.11"
 dependencies = [
+    "datasets>=3.0.0",
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",
     "streamlit>=1.36.0",
