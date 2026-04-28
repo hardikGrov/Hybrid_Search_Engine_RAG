@@ -1,3 +1,1 @@
-from fastapi import FastAPI
-
-app = FastAPI(title="Hybrid Search API")
+from backend.app.api.main import app
