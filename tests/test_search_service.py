@@ -73,3 +73,15 @@ def test_search_documents_merges_bm25_and_vector_scores(monkeypatch):
             "vector_score": 0.7,
         },
     }
+
+
+def test_normalize_scores_returns_empty_list_for_empty_input():
+    assert search_service.normalize_scores([]) == []
+
+
+def test_normalize_scores_returns_zeroes_when_all_scores_are_equal():
+    assert search_service.normalize_scores([4.0, 4.0, 4.0]) == [0, 0, 0]
+
+
+def test_normalize_scores_uses_min_max_normalization():
+    assert search_service.normalize_scores([2.0, 4.0, 6.0]) == [0.0, 0.5, 1.0]
