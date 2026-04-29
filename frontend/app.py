@@ -5,7 +5,16 @@ from urllib.request import Request, urlopen
 import streamlit as st
 
 API_URL = "http://localhost:8000/search"
-RESULT_COLUMNS = ["doc_id", "title", "bm25_score", "vector_score", "hybrid_score"]
+RESULT_COLUMNS = [
+    "rank",
+    "doc_id",
+    "title",
+    "bm25_score",
+    "vector_score",
+    "hybrid_score",
+    "hybrid_rank",
+    "rank_delta",
+]
 
 
 def search_backend(query: str, top_k: int, alpha: float):
@@ -27,6 +36,41 @@ def search_backend(query: str, top_k: int, alpha: float):
         return json.loads(response.read().decode("utf-8")).get("results", [])
 
 
+def ranked_rows(results, hybrid_ranks=None):
+    rows = []
+    hybrid_ranks = hybrid_ranks or {}
+
+    for rank, result in enumerate(results, start=1):
+        hybrid_rank = hybrid_ranks.get(result.get("doc_id"))
+        rank_delta = "" if hybrid_rank is None else hybrid_rank - rank
+        rows.append(
+            {
+                "rank": rank,
+                "doc_id": result.get("doc_id", ""),
+                "title": result.get("title", ""),
+                "bm25_score": result.get("bm25_score", ""),
+                "vector_score": result.get("vector_score", ""),
+                "hybrid_score": result.get("hybrid_score", ""),
+                "hybrid_rank": "" if hybrid_rank is None else hybrid_rank,
+                "rank_delta": rank_delta,
+            }
+        )
+
+    return rows
+
+
+def render_results(label, results, hybrid_ranks=None):
+    st.subheader(label)
+    rows = ranked_rows(results, hybrid_ranks=hybrid_ranks)
+    changed_count = sum(1 for row in rows if row["rank_delta"] not in ("", 0))
+    st.metric("Ranking differences", changed_count)
+    st.dataframe(
+        [{column: row[column] for column in RESULT_COLUMNS} for row in rows],
+        use_container_width=True,
+        hide_index=True,
+    )
+
+
 st.set_page_config(page_title="Hybrid Search", layout="wide")
 st.title("Hybrid Search")
 
@@ -41,7 +85,10 @@ if submitted:
         st.warning("Enter a query to search.")
     else:
         try:
-            results = search_backend(query, int(top_k), alpha)
+            top_k = int(top_k)
+            bm25_results = search_backend(query, top_k, alpha=1.0)
+            vector_results = search_backend(query, top_k, alpha=0.0)
+            hybrid_results = search_backend(query, top_k, alpha=alpha)
         except HTTPError as error:
             st.error(f"Search request failed: HTTP {error.code}")
         except URLError:
@@ -49,5 +96,15 @@ if submitted:
         except TimeoutError:
             st.error("Search request timed out.")
         else:
-            rows = [{column: result.get(column, "") for column in RESULT_COLUMNS} for result in results]
-            st.dataframe(rows, use_container_width=True, hide_index=True)
+            hybrid_ranks = {
+                result.get("doc_id"): rank for rank, result in enumerate(hybrid_results, start=1)
+            }
+            st.caption("Rank delta compares each section's rank with the Hybrid rank.")
+
+            bm25_column, vector_column, hybrid_column = st.columns(3)
+            with bm25_column:
+                render_results("Lexical (BM25)", bm25_results, hybrid_ranks=hybrid_ranks)
+            with vector_column:
+                render_results("Semantic (Vector)", vector_results, hybrid_ranks=hybrid_ranks)
+            with hybrid_column:
+                render_results("Hybrid", hybrid_results, hybrid_ranks=hybrid_ranks)
