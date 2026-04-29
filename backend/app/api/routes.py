@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 import time
 import uuid
 from typing import List
 
-from backend.app.db.sqlite import insert_log
+from backend.app.db.sqlite import get_metrics_stats, insert_log
 from backend.app.services.search_service import search_documents
 from backend.app.utils.logger import log_request
 
@@ -24,6 +25,12 @@ class SearchResponse(BaseModel):
 @router.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@router.get("/metrics", response_class=PlainTextResponse)
+def metrics():
+    total, avg_ms = get_metrics_stats()
+    return f"requests_total {total}\navg_latency_ms {avg_ms:g}\n"
 
 
 @router.post("/search", response_model=SearchResponse)
