@@ -44,13 +44,21 @@ class FakeSentenceTransformer:
         self.encode_calls = []
         FakeSentenceTransformer.instances.append(self)
 
-    def encode(self, texts, convert_to_numpy, normalize_embeddings, show_progress_bar):
+    def encode(
+        self,
+        texts,
+        convert_to_numpy,
+        normalize_embeddings,
+        show_progress_bar,
+        batch_size,
+    ):
         self.encode_calls.append(
             {
                 "texts": texts,
                 "convert_to_numpy": convert_to_numpy,
                 "normalize_embeddings": normalize_embeddings,
                 "show_progress_bar": show_progress_bar,
+                "batch_size": batch_size,
             }
         )
         return [embedding_for_text(text) for text in texts]
@@ -79,9 +87,14 @@ def vector_module(monkeypatch):
     fake_sentence_transformers = types.ModuleType("sentence_transformers")
     fake_sentence_transformers.SentenceTransformer = FakeSentenceTransformer
 
+    fake_torch = types.ModuleType("torch")
+    fake_torch.thread_counts = []
+    fake_torch.set_num_threads = lambda thread_count: fake_torch.thread_counts.append(thread_count)
+
     monkeypatch.setitem(sys.modules, "numpy", fake_numpy)
     monkeypatch.setitem(sys.modules, "faiss", fake_faiss)
     monkeypatch.setitem(sys.modules, "sentence_transformers", fake_sentence_transformers)
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
     sys.modules.pop("hybrid_search.index.vector", None)
 
     module = importlib.import_module("hybrid_search.index.vector")
@@ -96,6 +109,10 @@ def test_constructor_loads_sentence_transformer_on_cpu(vector_module):
     assert index.model.device == "cpu"
     assert index.documents == []
     assert index.index is None
+
+
+def test_import_limits_torch_to_single_thread(vector_module):
+    assert vector_module.torch.thread_counts == [1]
 
 
 def test_fit_builds_faiss_index_from_document_text(vector_module):
@@ -115,6 +132,7 @@ def test_fit_builds_faiss_index_from_document_text(vector_module):
         "convert_to_numpy": True,
         "normalize_embeddings": True,
         "show_progress_bar": False,
+        "batch_size": 16,
     }
 
 
