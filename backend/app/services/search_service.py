@@ -64,8 +64,9 @@ def search_documents(query: str, top_k: int, alpha: float = 0.5):
     if not query.strip():
         return []
 
-    bm25_results = get_bm25().search(query, top_k)
-    vector_results = get_vector().search(query, top_k)
+    candidate_count = len(get_docs())
+    bm25_results = get_bm25().search(query, candidate_count)
+    vector_results = get_vector().search(query, candidate_count)
 
     combined = {}
 
@@ -98,4 +99,5 @@ def search_documents(query: str, top_k: int, alpha: float = 0.5):
         document["vector_norm"] = vector_norm
         document["hybrid_score"] = alpha * bm25_norm + (1 - alpha) * vector_norm
 
-    return results
+    results.sort(key=lambda document: (-document["hybrid_score"], document["doc_id"]))
+    return results[:top_k]
