@@ -47,6 +47,19 @@ def get_vector():
     return _vector
 
 
+def normalize_scores(scores: list[float]):
+    if not scores:
+        return []
+
+    min_score = min(scores)
+    max_score = max(scores)
+    score_range = max_score - min_score
+    if score_range == 0:
+        return [0 for _ in scores]
+
+    return [(score - min_score) / score_range for score in scores]
+
+
 def search_documents(query: str, top_k: int):
     if not query.strip():
         return []
