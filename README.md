@@ -27,7 +27,7 @@ This system addresses both by combining them into a **hybrid retrieval pipeline*
 
 ## Architecture
 
-### Flow
+### Retreival Flow
 
 1. Query is sent to both BM25 and vector index  
 2. Each returns top-k results  
@@ -83,6 +83,12 @@ This system addresses both by combining them into a **hybrid retrieval pipeline*
   - BM25
   - Vector
   - Hybrid  
+- Rank comparison (rank delta)  
+- Latency display
+### Dashboard Preview
+
+![Dashboard](images/dashboard.png)
+
 
 ---
 
@@ -124,4 +130,54 @@ Hybrid search improves:
 python3.11 -m venv .venv
 source .venv/bin/activate
 pip install -e .
+```
 
+### 2. Prepare Dataset
+Place raw data in: data/raw/
+Run Ingestion
+
+```bash
+python -m hybrid_search.ingest.pipeline \
+  --input data/raw \
+  --out data/processed/docs.jsonl
+  ```
+### 3. Run Backend
+
+```bash
+uvicorn backend.app.api.main:app --reload
+  ```
+  Access:
+
+http://localhost:8000
+http://localhost:8000/docs
+
+### 4. Run Frontend
+
+```bash
+streamlit run frontend/app.py
+  ```
+  Access:
+
+http://localhost:8501
+
+### 5. Example API Request
+
+```bash
+curl -X POST http://localhost:8000/search \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Sri Lankan actress",
+    "top_k": 5,
+    "alpha": 0.5
+  }'
+  ```
+### 6. Run Evaluation
+
+```bash
+python -m evaluation.run_eval
+```
+  ### 7. One-Command Run ( End to End)
+
+```bash
+./up.sh
+```
