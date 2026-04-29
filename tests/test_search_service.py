@@ -63,8 +63,6 @@ def test_search_documents_merges_bm25_and_vector_scores(monkeypatch):
             "title": "Shared",
             "bm25_score": 2.5,
             "vector_score": 0.8,
-            "bm25_norm": 1.0,
-            "vector_norm": 1.0,
             "hybrid_score": 1.0,
         },
         "vector-only": {
@@ -72,11 +70,13 @@ def test_search_documents_merges_bm25_and_vector_scores(monkeypatch):
             "title": "Vector Only",
             "bm25_score": 0,
             "vector_score": 0.7,
-            "bm25_norm": 0.0,
-            "vector_norm": pytest.approx(0.875),
             "hybrid_score": pytest.approx(0.4375),
         },
     }
+    assert all(
+        set(result) == {"doc_id", "title", "bm25_score", "vector_score", "hybrid_score"}
+        for result in results
+    )
 
 
 def test_search_documents_uses_custom_alpha_and_sorts_by_hybrid_score(monkeypatch):
