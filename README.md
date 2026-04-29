@@ -76,7 +76,16 @@ This system addresses both by combining them into a **hybrid retrieval pipeline*
 
 ---
 
-### 6. Frontend (Streamlit)
+### 6. Request Logging
+- Every `/search` request gets a unique `request_id` (UUID)  
+- Request telemetry is captured for both success and failure paths  
+- Structured request logs are emitted as single-line JSON via the `hybrid_search` logger  
+- Log metadata includes UTC timestamp, request parameters, latency, result count, and error (if any)  
+- Request logs are persisted to SQLite at `data/query_logs.db` in the `query_logs` table  
+
+---
+
+### 7. Frontend (Streamlit)
 - Query input  
 - Alpha slider  
 - Side-by-side comparison:
@@ -92,7 +101,7 @@ This system addresses both by combining them into a **hybrid retrieval pipeline*
 
 ---
 
-### 7. Evaluation Module
+### 8. Evaluation Module
 - Uses labeled queries (qrels)  
 - Computes:
   - **MRR** (Mean Reciprocal Rank)
