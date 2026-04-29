@@ -190,3 +190,11 @@ python -m evaluation.run_eval
 ```bash
 ./up.sh
 ```
+
+This script bootstraps and runs the full local stack in one command:
+- Creates `.venv` if missing, activates it, upgrades `pip`, and installs the project (`pip install -e .`)
+- Starts FastAPI on `http://localhost:8000` and Streamlit on `http://localhost:8501`
+- Writes service logs to:
+  - `logs/api.log`
+  - `logs/frontend.log`
+- Keeps running while both services are healthy and exits if either process crashes
