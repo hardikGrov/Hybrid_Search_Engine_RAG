@@ -10,6 +10,7 @@ router = APIRouter()
 class SearchRequest(BaseModel):
     query: str
     top_k: int = 5
+    alpha: float = 0.5
 
 
 class SearchResponse(BaseModel):
@@ -23,5 +24,5 @@ def health():
 
 @router.post("/search", response_model=SearchResponse)
 def search(payload: SearchRequest):
-    results = search_documents(payload.query, payload.top_k)
+    results = search_documents(payload.query, payload.top_k, alpha=payload.alpha)
     return {"results": results}
