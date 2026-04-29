@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import pytest
+
 from backend.app.services import search_service
 
 
@@ -59,20 +61,55 @@ def test_search_documents_merges_bm25_and_vector_scores(monkeypatch):
             "title": "Shared",
             "bm25_score": 2.5,
             "vector_score": 0.8,
+            "bm25_norm": 1.0,
+            "vector_norm": 1.0,
+            "hybrid_score": 1.0,
         },
         "bm25-only": {
             "doc_id": "bm25-only",
             "title": "BM25 Only",
             "bm25_score": 1.5,
             "vector_score": 0,
+            "bm25_norm": 0.6,
+            "vector_norm": 0.0,
+            "hybrid_score": 0.3,
         },
         "vector-only": {
             "doc_id": "vector-only",
             "title": "Vector Only",
             "bm25_score": 0,
             "vector_score": 0.7,
+            "bm25_norm": 0.0,
+            "vector_norm": pytest.approx(0.875),
+            "hybrid_score": pytest.approx(0.4375),
         },
     }
+
+
+def test_search_documents_uses_custom_alpha_without_sorting(monkeypatch):
+    bm25 = FakeIndex(
+        [
+            SimpleNamespace(doc_id="bm25-first", score=2.0, document={"title": "BM25 First"}),
+            SimpleNamespace(doc_id="shared", score=1.0, document={"title": "Shared"}),
+        ]
+    )
+    vector = FakeIndex(
+        [
+            SimpleNamespace(doc_id="shared", title="Shared", score=0.2),
+            SimpleNamespace(doc_id="vector-only", title="Vector Only", score=1.0),
+        ]
+    )
+
+    monkeypatch.setattr(search_service, "get_bm25", lambda: bm25)
+    monkeypatch.setattr(search_service, "get_vector", lambda: vector)
+
+    results = search_service.search_documents("apple", top_k=2, alpha=0.25)
+    results_by_doc_id = {result["doc_id"]: result for result in results}
+
+    assert [result["doc_id"] for result in results] == ["bm25-first", "shared", "vector-only"]
+    assert results_by_doc_id["bm25-first"]["hybrid_score"] == 0.25
+    assert results_by_doc_id["shared"]["hybrid_score"] == pytest.approx(0.275)
+    assert results_by_doc_id["vector-only"]["hybrid_score"] == 0.75
 
 
 def test_normalize_scores_returns_empty_list_for_empty_input():

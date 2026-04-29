@@ -60,7 +60,7 @@ def normalize_scores(scores: list[float]):
     return [(score - min_score) / score_range for score in scores]
 
 
-def search_documents(query: str, top_k: int):
+def search_documents(query: str, top_k: int, alpha: float = 0.5):
     if not query.strip():
         return []
 
@@ -89,4 +89,13 @@ def search_documents(query: str, top_k: int):
         )
         document["vector_score"] = result.score
 
-    return list(combined.values())
+    results = list(combined.values())
+    bm25_norms = normalize_scores([document["bm25_score"] for document in results])
+    vector_norms = normalize_scores([document["vector_score"] for document in results])
+
+    for document, bm25_norm, vector_norm in zip(results, bm25_norms, vector_norms, strict=True):
+        document["bm25_norm"] = bm25_norm
+        document["vector_norm"] = vector_norm
+        document["hybrid_score"] = alpha * bm25_norm + (1 - alpha) * vector_norm
+
+    return results
