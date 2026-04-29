@@ -49,12 +49,14 @@ def test_search_documents_merges_bm25_and_vector_scores(monkeypatch):
 
     monkeypatch.setattr(search_service, "get_bm25", lambda: bm25)
     monkeypatch.setattr(search_service, "get_vector", lambda: vector)
+    monkeypatch.setattr(search_service, "get_docs", lambda: [{}, {}, {}])
 
     results = search_service.search_documents("apple", top_k=2)
     results_by_doc_id = {result["doc_id"]: result for result in results}
 
-    assert bm25.calls == [("apple", 2)]
-    assert vector.calls == [("apple", 2)]
+    assert bm25.calls == [("apple", 3)]
+    assert vector.calls == [("apple", 3)]
+    assert [result["doc_id"] for result in results] == ["shared", "vector-only"]
     assert results_by_doc_id == {
         "shared": {
             "doc_id": "shared",
@@ -64,15 +66,6 @@ def test_search_documents_merges_bm25_and_vector_scores(monkeypatch):
             "bm25_norm": 1.0,
             "vector_norm": 1.0,
             "hybrid_score": 1.0,
-        },
-        "bm25-only": {
-            "doc_id": "bm25-only",
-            "title": "BM25 Only",
-            "bm25_score": 1.5,
-            "vector_score": 0,
-            "bm25_norm": 0.6,
-            "vector_norm": 0.0,
-            "hybrid_score": 0.3,
         },
         "vector-only": {
             "doc_id": "vector-only",
@@ -86,7 +79,7 @@ def test_search_documents_merges_bm25_and_vector_scores(monkeypatch):
     }
 
 
-def test_search_documents_uses_custom_alpha_without_sorting(monkeypatch):
+def test_search_documents_uses_custom_alpha_and_sorts_by_hybrid_score(monkeypatch):
     bm25 = FakeIndex(
         [
             SimpleNamespace(doc_id="bm25-first", score=2.0, document={"title": "BM25 First"}),
@@ -102,14 +95,32 @@ def test_search_documents_uses_custom_alpha_without_sorting(monkeypatch):
 
     monkeypatch.setattr(search_service, "get_bm25", lambda: bm25)
     monkeypatch.setattr(search_service, "get_vector", lambda: vector)
+    monkeypatch.setattr(search_service, "get_docs", lambda: [{}, {}, {}])
 
     results = search_service.search_documents("apple", top_k=2, alpha=0.25)
     results_by_doc_id = {result["doc_id"]: result for result in results}
 
-    assert [result["doc_id"] for result in results] == ["bm25-first", "shared", "vector-only"]
-    assert results_by_doc_id["bm25-first"]["hybrid_score"] == 0.25
+    assert [result["doc_id"] for result in results] == ["vector-only", "shared"]
     assert results_by_doc_id["shared"]["hybrid_score"] == pytest.approx(0.275)
     assert results_by_doc_id["vector-only"]["hybrid_score"] == 0.75
+
+
+def test_search_documents_breaks_hybrid_score_ties_by_doc_id(monkeypatch):
+    bm25 = FakeIndex(
+        [
+            SimpleNamespace(doc_id="doc_b", score=1.0, document={"title": "B"}),
+            SimpleNamespace(doc_id="doc_a", score=1.0, document={"title": "A"}),
+        ]
+    )
+    vector = FakeIndex([])
+
+    monkeypatch.setattr(search_service, "get_bm25", lambda: bm25)
+    monkeypatch.setattr(search_service, "get_vector", lambda: vector)
+    monkeypatch.setattr(search_service, "get_docs", lambda: [{}, {}])
+
+    results = search_service.search_documents("apple", top_k=2)
+
+    assert [result["doc_id"] for result in results] == ["doc_a", "doc_b"]
 
 
 def test_normalize_scores_returns_empty_list_for_empty_input():
