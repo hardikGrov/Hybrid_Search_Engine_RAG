@@ -9,6 +9,7 @@ __pycache__/
 
 # OS
 .DS_Store
+*.egg-info/
 
 # Data
 data/raw/*
