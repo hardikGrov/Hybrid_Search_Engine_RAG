@@ -180,12 +180,7 @@ curl -X POST http://localhost:8000/search \
     "alpha": 0.5
   }'
   ```
-### 6. Run Evaluation
-
-```bash
-python -m evaluation.run_eval
-```
-  ### 7. One-Command Run ( End to End)
+### 6. One-Command Run (end to end)
 
 ```bash
 ./up.sh
@@ -198,3 +193,38 @@ This script bootstraps and runs the full local stack in one command:
   - `logs/api.log`
   - `logs/frontend.log`
 - Keeps running while both services are healthy and exits if either process crashes
+
+---
+
+## Tests
+
+From the repository root, activate your virtual environment, install dev dependencies (includes `pytest`), then run the suite:
+
+```bash
+source .venv/bin/activate
+pip install -e ".[dev]"
+python -m pytest
+```
+
+Run quietly or stop on first failure:
+
+```bash
+python -m pytest -q
+python -m pytest -x
+```
+
+---
+
+## Evaluation
+
+The evaluation script runs BM25-only, vector-only, and hybrid configurations against labeled queries in `evaluation/queries.json` and relevance judgments in `evaluation/qrels.json`. It prints **MRR** and **nDCG@10** for each setup.
+
+**Prerequisites:** the processed corpus must exist at `data/processed/docs.jsonl` (see dataset ingestion above). The script loads documents and builds indexes on the fly via `search_documents`, same as the API.
+
+From the repo root with the environment activated:
+
+```bash
+source .venv/bin/activate
+pip install -e .
+python -m evaluation.run_eval
+```

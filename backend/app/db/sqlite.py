@@ -26,6 +26,24 @@ def init_db() -> None:
         conn.commit()
 
 
+def get_metrics_stats() -> tuple[int, float]:
+    """Return (total row count, average latency_ms) from query_logs."""
+    if not DB_PATH.exists():
+        return 0, 0.0
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            row = conn.execute(
+                "SELECT COUNT(*), AVG(latency_ms) FROM query_logs"
+            ).fetchone()
+    except sqlite3.Error:
+        return 0, 0.0
+    total = int(row[0] or 0)
+    avg = row[1]
+    if avg is None:
+        return total, 0.0
+    return total, float(avg)
+
+
 def insert_log(data: dict) -> None:
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
