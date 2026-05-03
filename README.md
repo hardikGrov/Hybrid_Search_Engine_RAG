@@ -9,6 +9,12 @@ This project implements a **hybrid search system** that combines:
 
 The system improves retrieval quality by combining both signals through **score normalization and weighted fusion**.
 
+Includes:
+- FastAPI backend
+- Streamlit multi-page dashboard
+- Evaluation framework (MRR, nDCG)
+- Observability (structured logs + SQLite)
+
 ---
 
 ## Overview
@@ -24,6 +30,72 @@ Each has limitations:
 This system addresses both by combining them into a **hybrid retrieval pipeline**.
 
 ---
+
+### 📊 Multi-Page Dashboard (Streamlit)
+
+The UI is now organized into **4 dedicated pages**:
+
+---
+
+## 🧭 Pages Overview
+
+### 1️⃣ Search Page
+- Query input with controls:
+- Alpha (hybrid weight)
+- Top-K results
+- Displays:
+- BM25 results
+- Vector results
+- Hybrid results
+- Per-result breakdown:
+- BM25 score
+- Vector score
+- Hybrid score
+
+---
+
+### 2️⃣ KPI Dashboard
+System-level metrics from query logs:
+
+- Latency:
+- p50
+- p95
+- Request volume over time
+- Top queries
+- Zero-result queries
+
+---
+
+### 3️⃣ Evaluation Page
+Model quality tracking:
+
+- Experiment comparison table:
+- MRR
+- nDCG@10
+- Trend visualization across runs
+- Highlights best-performing configuration
+
+---
+
+### 4️⃣ Debug Page
+Observability + failure analysis:
+
+- Logs from SQLite (`query_logs.db`)
+- Filters:
+- Time range:
+  - Last 1h
+  - Last 24h
+  - Last 7d
+  - Last 30d
+- Error-only toggle
+- Displays:
+- request_id
+- query
+- latency
+- error
+
+---
+
 
 ## Architecture
 
@@ -86,18 +158,21 @@ This system addresses both by combining them into a **hybrid retrieval pipeline*
 ---
 
 ### 7. Frontend (Streamlit)
-- Query input  
-- Alpha slider  
-- Side-by-side comparison:
-  - BM25
-  - Vector
-  - Hybrid  
-- Rank comparison (rank delta)  
-- Latency display
-### Dashboard Preview
+The Streamlit frontend is organized into a multi-page dashboard for clear separation of concerns:
 
-![Dashboard](images/dashboard.png)
+- **Search Page**  
+  Main interaction interface for running queries. Displays BM25, Vector, and Hybrid results with score breakdowns and document snippets.
 
+- **KPI Dashboard**  
+  Shows system-level metrics derived from query logs, including latency (p50/p95), request volume trends, top queries, and zero-result queries.
+
+- **Evaluation Page**  
+  Provides offline evaluation insights with experiment comparisons (MRR, nDCG@10) and trend visualization across runs.
+
+- **Debug Page**  
+  Enables observability and troubleshooting by exposing structured request logs with filters (time range, error-only) and key fields like latency and errors.
+
+The UI is designed to mirror real-world search systems with separate views for retrieval, monitoring, evaluation, and debugging.
 
 ---
 
