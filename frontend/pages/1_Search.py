@@ -85,7 +85,7 @@ st.subheader("Query")
 
 query = st.text_input(
     "Enter search query",
-    placeholder="e.g. rest is important but not mandatory",
+    placeholder="e.g. What is the capital of France?",
 )
 
 col1, col2 = st.columns(2)
