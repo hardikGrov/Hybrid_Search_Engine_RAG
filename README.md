@@ -39,63 +39,55 @@ The UI is now organized into **4 dedicated pages**:
 
 ## 🧭 Pages Overview
 
-### 1️⃣ Search Page
-- Query input with controls:
-- Alpha (hybrid weight)
-- Top-K results
-- Displays:
-- BM25 results
-- Vector results
-- Hybrid results
-- Per-result breakdown:
-- BM25 score
-- Vector score
-- Hybrid score
+### 🔍 Search Page
+Interactive query explorer to compare retrieval strategies.
+
+- Controls:  
+  - Alpha (BM25 ↔ Vector balance)  
+  - Top-K results  
+- Displays:  
+  - BM25, Vector, and Hybrid results  
+- Per-result metrics:  
+  - BM25 score  
+  - Vector score  
+  - Hybrid score  
 
 ---
 
-### 2️⃣ KPI Dashboard
-System-level metrics from query logs:
+### 📊 KPI Dashboard
+System-level performance and usage metrics.
 
-- Latency:
-- p50
-- p95
-- Request volume over time
-- Top queries
-- Zero-result queries
+- Latency: p50, p95  
+- Request volume trends  
+- Top queries  
+- Zero-result queries  
 
 ---
 
-### 3️⃣ Evaluation Page
-Model quality tracking:
+### 🧪 Evaluation Page
+Tracks retrieval quality across experiments.
 
-- Experiment comparison table:
-- MRR
-- nDCG@10
-- Trend visualization across runs
-- Highlights best-performing configuration
-
----
-
-### 4️⃣ Debug Page
-Observability + failure analysis:
-
-- Logs from SQLite (`query_logs.db`)
-- Filters:
-- Time range:
-  - Last 1h
-  - Last 24h
-  - Last 7d
-  - Last 30d
-- Error-only toggle
-- Displays:
-- request_id
-- query
-- latency
-- error
+- Metrics:  
+  - MRR  
+  - nDCG@10  
+- Compare runs and identify best configuration  
 
 ---
 
+### 🐞 Debug Page
+Logs and failure analysis for observability.
+
+- Source: `query_logs.db`  
+- Filters:  
+  - Time range (1h, 24h, 7d, 30d)  
+  - Error-only toggle  
+- Fields:  
+  - request_id  
+  - query  
+  - latency  
+  - error  
+
+---
 
 ## Architecture
 
