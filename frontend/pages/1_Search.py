@@ -74,7 +74,7 @@ def render_results(label, results, hybrid_ranks=None):
 
 # ---------------- UI ---------------- #
 
-st.title("🔍 Hybrid Search Debugger")
+st.title("🔍 Hybrid Search Engine")
 
 st.caption(
     "Compare BM25 (keyword), Vector (semantic), and Hybrid ranking.\n"
